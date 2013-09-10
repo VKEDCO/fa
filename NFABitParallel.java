@@ -1,18 +1,29 @@
 package org.vkedco.toc.nfabitparallel;
 
-public class NFABitParallel {
+/*
+ *==============================================================================
+ * An implementation of a simple NFA as a parallel bit search.
+ * Inspired by the book A. Brooks-Weber "Formal Language: A Practical Approach"
+ *==============================================================================
+ */
 
+public class NFAParallelBitSearch {
+
+	// this is the set of states representend as binary number.
+	// the rightmost bit denotes q0; the middle bit denotes q1,
+	// the leftmost bit denotes q2. if a bit is set to 1, the
+	// nfa is in that state.
 	static int mStateSet;
 	
-	static void reset() {
-		mStateSet = 1<<0;
-	}
+	// set the state set to '001'
+	static void reset() { mStateSet = 1<<0; }
 	
-	static int[][] mDelta = 
+	// mDeltaTable[state][symbol] = binary string
+	static int[][] mDeltaTable = 
 	{
-		{1 << 0, 1 << 0 | 1 << 1 }, // d(q0,0)={q0}; d(q0,1)={q0, q1}
-		{1 << 2, 1 << 2 }, 			// d(q1,0)={q2}; d(q1,1)={q2}
-		{0, 0}						// d(q2,0)={}; d(q2,1)={}
+		{1 << 0, 1 << 0 | 1 << 1}, // transitions from q0: d(0,0)={0}; d(0,1)={0,1}
+		{1 << 2, 1 << 2}, 	   // transitions from q1: d(1,0)={2}; d(1,1)={2}
+		{0, 0}			   // transitions from q2: d(2,0)={};  d(2,1)={}
 	};
 	
 	static void processInput(String input) {
@@ -22,7 +33,7 @@ public class NFABitParallel {
 			for(int s = 0; s <= 2; s++) {
 				if ( (mStateSet & (1 << s)) != 0) {
 					try {
-						nextStateSet |= mDelta[s][c-'0'];
+						nextStateSet |= mDeltaTable[s][c-'0'];
 					}
 					catch ( ArrayIndexOutOfBoundsException ex) {
 					}
@@ -32,18 +43,30 @@ public class NFABitParallel {
 		}
 	}
 	
+	// accept iff mStateState & '100' is not a zero, i.e., the lefmost bit
+	// of mStateState is 1.
 	static boolean isAccepted() {
 		return (mStateSet & (1 << 2)) != 0;
 	}
 	
+	static void shiftExamples() {
+		System.out.println("1 << 0 == " + Integer.toString(1<<0));
+		System.out.println("1 << 1 == " + Integer.toString(1<<1));
+		System.out.println("1 << 2 == " + Integer.toString(1<<2));
+		System.out.println("1 << 1 | 1 << 2 == " + Integer.toString(1 << 1 | 1 << 2));
+		System.out.println("1 << 2 | 1 << 0 == " + Integer.toString(1 << 2 | 1 << 0));
+		System.out.println("1 << 1 & 1 << 2 == " + Integer.toString(1 << 1 & 1 << 2));
+		System.out.println("(1 << 2 | 1 << 0) & (1 << 2) == " + Integer.toString((1 << 2 | 1 << 0) & (1 << 2)));
+	}
+	
 	public static void main(String[] args) {
-		NFABitParallel.reset();
-		NFABitParallel.processInput("00011");
+		NFAParallelBitSearch.reset();
+		NFAParallelBitSearch.processInput("00011");
 		String inputs[] = { "00011", "11", "00000011111000010", "0", "00", "10000" };
 		for(String input: inputs) {
-			NFABitParallel.reset();
-			NFABitParallel.processInput(input);
-			if ( NFABitParallel.isAccepted() ) {
+			NFAParallelBitSearch.reset();
+			NFAParallelBitSearch.processInput(input);
+			if ( NFAParallelBitSearch.isAccepted() ) {
 				System.out.println(input + " accepted");
 			}
 			else {
@@ -52,3 +75,4 @@ public class NFABitParallel {
 		}
 	}
 }
+

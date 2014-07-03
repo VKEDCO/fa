@@ -1,171 +1,217 @@
-## =======================================
-## An implementation of the algorithm given in
-## Ch. 03 of "Introduction to Automata Theory, Languages,
-## and Computation" by J. Hopcroft and J. Ullman.
-## The algorithm is based on the Myhill-Nerode Theorem.
-##
+## ===============================================
+## Several examples of applying the Myhill-Nerode
+## Theorem to minimize dfas.
 ## Author: Vladimir Kulyukin
 ## Bugs to vladimir dot kulyukin at gmail dot com
-## =======================================
-from DFA import DFA
+## ===============================================
 
-__metaclass__ = type
+from MyhillNerodeMinDFA import MyhillNerodeMinDFA
 
-class MyhillNerodeMinDFA(DFA):
-    'Minimization algorithm basd on Myhill-Nerode Theorem'
+## ===================================================
+## Example from Ch. 03 of "Introduction to Automata Theory,
+## Languages, and Computation" by J. Hopcroft and J. Ullman.
+## Note that the state 'd' is removed as unreachable and, hence,
+## does not figure in the minimized version.
 
-    def __init__(self):
-        super(MyhillNerodeMinDFA, self).__init__()
+dfa_01 = MyhillNerodeMinDFA()
 
-    def minimize(self):
-        self.remove_unreachable_states()
-        marked_states = {}
-        state_pair_lists = {}
-        states, final_states = self.get_states(), self.get_final_states()
-        diff_states = states.difference(final_states)
-        self.__initialize_marked_states(marked_states)
-        for p in final_states:
-            for q in diff_states:
-                self.__mark_state_pair(p, q, marked_states)
-        fin_pairs = set([(x, y)
-                           for x in final_states
-                           for y in final_states
-                           if x != y])
-        diff_pairs = set([(x, y)
-                             for x in diff_states
-                             for y in diff_states
-                             if x != y])
-        state_pairs = fin_pairs.union(diff_pairs)
-        for p, q in state_pairs:
-            if self.__is_state_pair_marked_on_some_symbol(p, q, marked_states):
-                self.__mark_state_pair(p, q, marked_states)
-                self.__mark_listed_state_pairs(p, q, marked_states, state_pair_lists)
-            else:
-                for symbol in self.get_sigma():
-                    pp, qq = self.delta(p, symbol), self.delta(q, symbol)
-                    if pp != qq:
-                        self.__add_to_state_pair_list_for(pp, qq, p, q, state_pair_lists)
-        return self.__construct_min_dfa_from_marked_states(marked_states)
+dfa_01.set_states(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])
+dfa_01.set_sigma(['0', '1'])
+dfa_01.set_start_state('a')
+dfa_01.set_final_states(['c'])
+## state a
+dfa_01.add_transition('a', '0', 'b')
+dfa_01.add_transition('a', '1', 'f')
+## state b
+dfa_01.add_transition('b', '0', 'g')
+dfa_01.add_transition('b', '1', 'c')
+## state c
+dfa_01.add_transition('c', '0', 'a')
+dfa_01.add_transition('c', '1', 'c')
+## state d
+dfa_01.add_transition('d', '0', 'c')
+dfa_01.add_transition('d', '1', 'g')
+## state e 
+dfa_01.add_transition('e', '0', 'h')
+dfa_01.add_transition('e', '1', 'f')
+## state f 
+dfa_01.add_transition('f', '0', 'c')
+dfa_01.add_transition('f', '1', 'g')
+## state g
+dfa_01.add_transition('g', '0', 'g')
+dfa_01.add_transition('g', '1', 'e')
+## state h
+dfa_01.add_transition('h', '0', 'g')
+dfa_01.add_transition('h', '1', 'c')
 
-    def __initialize_marked_states(self, marked_states):
-        for s1 in self.get_states():
-            for s2 in self.get_states():
-                if s1 != s2:
-                    key01, key02 = (s1, s2), (s2, s1)
-                    if not (marked_states.has_key(key01) or marked_states.has_key(key02)):
-                        marked_states[key01] = False
+mindfa_01 = dfa_01.minimize()
 
-    def __mark_state_pair(self, s1, s2, marked_states):
-        key01, key02 = (s1, s2), (s2, s1)
-        if marked_states.has_key(key01):
-            marked_states[key01] = True
-        elif marked_states.has_key(key02):
-            marked_states[key02] = True
-        else:
-            raise Exception('Unmarkable state pair: ' + str(key01))
+## ====================================================
+## Example 1 from http://www.cs.odu.edu/~toida/nerzic/390teched/regular/fa/min-fa.html
 
-    def __is_state_pair_marked(self, s1, s2, marked_states):
-        key01, key02 = (s1, s2), (s2, s1)
-        if marked_states.has_key(key01):
-            return marked_states[key01]
-        elif marked_states.has_key(key02):
-            return marked_states[key02]
-        else:
-            raise Exception('Unknown state pair; ' + str(key01))
+dfa_02 = MyhillNerodeMinDFA()
+dfa_02.set_states(set(['1', '2', '3', '4', '5']))
+dfa_02.set_sigma(set(['a', 'b']))
+dfa_02.set_final_states(set(['1', '5']))
+dfa_02.set_start_state('1')
 
-    def __is_state_pair_marked_on_some_symbol(self, s1, s2, marked_states):
-        for symbol in self.get_sigma():
-            p, q = self.delta(s1, symbol), self.delta(s2, symbol)
-            if p != q:
-                if self.__is_state_pair_marked(p, q, marked_states):
-                    return True
-        return False
+dfa_02.add_transition('1', 'a', '3')
+dfa_02.add_transition('1', 'b', '2')
+dfa_02.add_transition('2', 'a', '4')
+dfa_02.add_transition('2', 'b', '1')
+dfa_02.add_transition('3', 'a', '5')
+dfa_02.add_transition('3', 'b', '4')
+dfa_02.add_transition('4', 'a', '4')
+dfa_02.add_transition('4', 'b', '4')
+dfa_02.add_transition('5', 'a', '3')
+dfa_02.add_transition('5', 'b', '2')
 
-    def __add_to_state_pair_list_for(self, pp, qq, p, q, state_pair_lists):
-        key01, key02 = (pp, qq), (qq, pp)
-        if state_pair_lists.has_key(key01):
-            state_pair_lists[key01].append((p, q))
-        elif state_pair_lists.has_key(key02):
-            state_pair_lists[key02].append((p, q))
-        else:
-            state_pair_lists[key01] = [(p, q)]
+mindfa_02 = dfa_02.minimize()
 
-    def __mark_listed_state_pairs(self, s1, s2, marked_states, state_pair_lists):
-        self.__mark_state_pair(s1, s2, marked_states)
-        key01, key02 = (s1, s2), (s2, s1)
-        state_list_01 = state_pair_lists.get(key01, [])
-        state_list_02 = state_pair_lists.get(key02, [])
-        for p01, q01 in state_list_01:
-            self.__mark_listed_state_pairs(p01, q01, marked_states, state_pair_lists)
-        for p02, q02 in state_list_02:
-            self.__mark_listed_state_pairs(p02, q02, marked_states, state_pair_lists)
+## ====================================================
+## Example 2 from http://www.cs.odu.edu/~toida/nerzic/390teched/regular/fa/min-fa.html
 
-    def __construct_equivalence_class_for_state(self, state, unmarked_states):
-        common_state = ()
-        shared_unmarked_states = [us for us in unmarked_states if state in us]
-        for sus in shared_unmarked_states:
-            common_state += sus
-        set_common_state = set(common_state)
-        common_state = ()
-        for x in set_common_state:
-            common_state += (x,)
-        if len(common_state) == 0:
-            common_state = (state,)
-        return common_state
+dfa_03 = MyhillNerodeMinDFA()
 
-    def __find_equivalence_class_for_state(self, state, equiv_classes):
-        x = [eqc for eqc in equiv_classes if state in eqc]
-        if len(x) == 0:
-            return None
-        else:
-            return x[0]
+dfa_03.set_states(set(['1', '2', '3', '4', '5', '6']))
+dfa_03.set_sigma(set(['a', 'b']))
+dfa_03.set_final_states(set(['1', '2', '4', '5', '6']))
+dfa_03.set_start_state('1')
 
-    ## for debugging only
-    def display_unmarked_states(self, marked_states):
-        for k, v in marked_states.iteritems():
-            if v == False:
-                print k
+dfa_03.add_transition('1', 'a', '2')
+dfa_03.add_transition('1', 'b', '3')
+dfa_03.add_transition('2', 'a', '2')
+dfa_03.add_transition('2', 'b', '4')
+dfa_03.add_transition('3', 'a', '3')
+dfa_03.add_transition('3', 'b', '3')
+dfa_03.add_transition('4', 'a', '6')
+dfa_03.add_transition('4', 'b', '3')
+dfa_03.add_transition('5', 'a', '5')
+dfa_03.add_transition('5', 'b', '3')
+dfa_03.add_transition('6', 'a', '5')
+dfa_03.add_transition('6', 'b', '4')
 
-    def __get_unmarked_states(self, marked_states):
-        return [k for k, v in marked_states.iteritems() if v == False]
+mindfa_03 = dfa_03.minimize()
 
-    def __construct_min_dfa_from_marked_states(self, marked_states):
-        sigma = self.get_sigma()
-        final_states = self.get_final_states()
-        unmarked_states = self.__get_unmarked_states(marked_states)
-        new_delta_table = {}
-        new_states = []
-        ##print 'Unmarked state pairs:'
-        ##print_unmarked_state_pairs(marked_states)
-        for old_state in self.get_states():
-            eqc = self.__construct_equivalence_class_for_state(old_state, unmarked_states)
-            if len(eqc) > 0 and not eqc in new_states:
-                new_states.append(eqc)
-        old_start_state = self.get_start_state()
-        ##print 'New States: ', str(new_states)
-        new_start_state = [s for s in new_states if old_start_state in s][0]
-        ##print 'New Start State: ', new_start_state
-        ##return None
-        q_of_states = [new_start_state]
-        explored_states = {}
-        while len(q_of_states) != 0:
-            ##print q_of_states
-            curr_state = q_of_states.pop()
-            explored_states[curr_state] = True
-            for s in sigma:
-                old_state = self.delta(curr_state[0], s)
-                new_state = self.__find_equivalence_class_for_state(old_state, new_states)
-                if new_state == None:
-                    new_state = old_state,
-                new_delta_table[(curr_state, s)] = new_state
-                if not explored_states.has_key(new_state):
-                    q_of_states.append(new_state)
-        rslt_dfa = DFA()
-        rslt_dfa.set_states(set([x[0] for x in new_delta_table.iterkeys()]))
-        rslt_dfa.set_sigma(sigma)
-        rslt_dfa.set_start_state(new_start_state)
-        rslt_dfa.set_delta_table(new_delta_table)
-        rslt_dfa.set_final_states(set([x[0]
-                                       for x in new_delta_table.iterkeys()
-                                       if len(final_states.intersection(set(x[0]))) > 0]))
-        return rslt_dfa
+## ==========================================
+## example from http://www.eecs.berkeley.edu/~sseshia/172/lectures/Lecture6.pdf
+
+dfa_04 = MyhillNerodeMinDFA()
+dfa_04.set_states(set(['a', 'b', 'c', 'd']))
+dfa_04.set_sigma(set(['0', '1']))
+dfa_04.set_final_states(set(['b', 'c']))
+dfa_04.set_start_state('a')
+dfa_04.add_transition('a', '0', 'b')
+dfa_04.add_transition('a', '1', 'd')
+dfa_04.add_transition('b', '0', 'c')
+dfa_04.add_transition('b', '1', 'd')
+dfa_04.add_transition('c', '0', 'b')
+dfa_04.add_transition('c', '1', 'a')
+dfa_04.add_transition('d', '0', 'c')
+dfa_04.add_transition('d', '1', 'a')
+
+mindfa_04 = dfa_04.minimize()
+
+## ==========================================
+## example 1 from https://www.cs.umd.edu/class/fall2009/cmsc330/lectures/discussion2.pdf
+## Note that the FA was made complete by adding one state F.
+
+dfa_05 = MyhillNerodeMinDFA()
+dfa_05.set_states(set(['A', 'B', 'C', 'D', 'E', 'F']))
+dfa_05.set_sigma(set(['0', '1']))
+dfa_05.set_final_states(set(['E']))
+dfa_05.set_start_state('A')
+dfa_05.add_transition('A', '0', 'B')
+dfa_05.add_transition('A', '1', 'C')
+dfa_05.add_transition('B', '0', 'D')
+dfa_05.add_transition('B', '1', 'D')
+dfa_05.add_transition('C', '0', 'D')
+dfa_05.add_transition('C', '1', 'D')
+dfa_05.add_transition('D', '0', 'E')
+dfa_05.add_transition('D', '1', 'E')
+dfa_05.add_transition('E', '0', 'F')
+dfa_05.add_transition('E', '1', 'F')
+dfa_05.add_transition('F', '0', 'F')
+dfa_05.add_transition('F', '1', 'F')
+
+mindfa_05 = dfa_05.minimize()
+
+## ==========================================
+## example 2 from https://www.cs.umd.edu/class/fall2009/cmsc330/lectures/discussion2.pdf
+## Note that the FA was made complete by adding one state F.
+
+dfa_06 = MyhillNerodeMinDFA()
+dfa_06.set_states(set(['A', 'B', 'C', 'D', 'E', 'F']))
+dfa_06.set_sigma(set(['0', '1']))
+dfa_06.set_final_states(set(['A', 'C', 'E']))
+dfa_06.set_start_state('A')
+dfa_06.add_transition('A', '0', 'A')
+dfa_06.add_transition('A', '1', 'B')
+dfa_06.add_transition('B', '0', 'C')
+dfa_06.add_transition('B', '1', 'D')
+dfa_06.add_transition('C', '0', 'C')
+dfa_06.add_transition('D', '0', 'C')
+dfa_06.add_transition('D', '1', 'D')
+dfa_06.add_transition('C', '1', 'E')
+dfa_06.add_transition('E', '0', 'E')
+dfa_06.add_transition('E', '1', 'E')
+
+mindfa_06 = dfa_06.minimize()
+
+## ==========================================
+## example 3 from https://www.cs.umd.edu/class/fall2009/cmsc330/lectures/discussion2.pdf
+## Note that the FA was made complete by adding one state J.
+
+dfa_07 = MyhillNerodeMinDFA()
+dfa_07.set_states(set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']))
+dfa_07.set_sigma(set(['1', '2', '3']))
+dfa_07.set_start_state('A')
+dfa_07.set_final_states(set(['I']))
+dfa_07.add_transition('A', '1', 'B')
+dfa_07.add_transition('A', '2', 'C')
+dfa_07.add_transition('A', '3', 'D')
+
+dfa_07.add_transition('B', '1', 'E')
+dfa_07.add_transition('B', '2', 'E')
+dfa_07.add_transition('B', '3', 'E')
+
+dfa_07.add_transition('C', '1', 'E')
+dfa_07.add_transition('C', '2', 'E')
+dfa_07.add_transition('C', '3', 'E')
+
+dfa_07.add_transition('D', '1', 'E')
+dfa_07.add_transition('D', '2', 'E')
+dfa_07.add_transition('D', '3', 'E')
+
+dfa_07.add_transition('E', '1', 'F')
+dfa_07.add_transition('E', '2', 'G')
+dfa_07.add_transition('E', '3', 'H')
+
+dfa_07.add_transition('F', '1', 'I')
+dfa_07.add_transition('F', '2', 'I')
+dfa_07.add_transition('F', '3', 'I')
+
+dfa_07.add_transition('G', '1', 'I')
+dfa_07.add_transition('G', '2', 'I')
+dfa_07.add_transition('G', '3', 'I')
+
+dfa_07.add_transition('H', '1', 'I')
+dfa_07.add_transition('H', '2', 'J')
+dfa_07.add_transition('H', '3', 'J')
+
+dfa_07.add_transition('I', '1', 'J')
+dfa_07.add_transition('I', '2', 'J')
+dfa_07.add_transition('I', '3', 'J')
+
+dfa_07.add_transition('J', '1', 'J')
+dfa_07.add_transition('J', '2', 'J')
+dfa_07.add_transition('J', '3', 'J')
+
+mindfa_07 = dfa_07.minimize()
+
+## =================================================
+
+
+
+
+                        

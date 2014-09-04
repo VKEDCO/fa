@@ -49,7 +49,7 @@ public class NFAParallelBitSearch {
 		return (mStateSet & (1 << 2)) != 0;
 	}
 	
-	static void shiftExamples() {
+	static void bitFiddlingExamples() {
 		System.out.println("1 << 0 == " + Integer.toString(1<<0));
 		System.out.println("1 << 1 == " + Integer.toString(1<<1));
 		System.out.println("1 << 2 == " + Integer.toString(1<<2));
@@ -58,6 +58,29 @@ public class NFAParallelBitSearch {
 		System.out.println("1 << 1 & 1 << 2 == " + Integer.toString(1 << 1 & 1 << 2));
 		System.out.println("(1 << 2 | 1 << 0) & (1 << 2) == " + Integer.toString((1 << 2 | 1 << 0) & (1 << 2)));
 	}
+	
+	// display the bits of mStateSet
+	static void displayStateSet() {
+        	int q0_is_set = 1 << 0;
+        	int q1_is_set = 1 << 1;
+        	int q2_is_set = 1 << 2;
+        	System.out.print("State Set: ");
+        	if ( (mStateSet & q2_is_set) != 0 )
+            		System.out.print('1');
+        	else
+            		System.out.print('0');
+        
+        	if ( (mStateSet & q1_is_set) != 0 )
+            		System.out.print('1');
+        	else
+            		System.out.print('0');
+        
+        	if ( (mStateSet & q0_is_set) != 0 )
+            		System.out.print('1');
+        	else
+            	System.out.print('0');
+        	System.out.println();
+    	}
 	
 	public static void main(String[] args) {
 		NFAParallelBitSearch.reset();
